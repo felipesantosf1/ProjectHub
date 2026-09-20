@@ -11,3 +11,8 @@ class Tarefa(BaseModel):
     titulo: str
     status: str
     projeto_id: int
+
+# Molde para quando o Frontend quiser ATUALIZAR uma tarefa
+class TarefaAtualizacao(BaseModel):
+    titulo: str
+    status: str
