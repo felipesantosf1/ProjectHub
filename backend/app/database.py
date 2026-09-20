@@ -17,3 +17,12 @@ def get_db_connection():
     )
 
     return dados
+
+
+def get_db():
+    dados = get_db_connection()
+
+    try:
+        yield dados
+    finally:
+        dados.close()
