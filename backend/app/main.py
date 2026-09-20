@@ -1,14 +1,25 @@
 from fastapi import FastAPI
+from app.routes import projetos
+from app.routes import tarefas  # 1. Importamos o novo arquivo de rotas
 
-from app.routes.projetos import router as projetos_router
+app = FastAPI(title="ProjectHub API")
 
+# Incluímos as rotas de projetos (que você já tinha)
+app.include_router(projetos.router)
 
-app = FastAPI()
-
+# 2. Incluímos as rotas de tarefas (NOVO)
+app.include_router(tarefas.router)
 
 @app.get("/")
-def inicio():
-    return {"mensagem": "ProjectHub API funcionando!"}
+def raiz():
+    return {"mensagem": "Bem-vindo à API do ProjectHub!"}
 
 
-app.include_router(projetos_router)
+
+
+
+
+
+
+
+
