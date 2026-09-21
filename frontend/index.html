@@ -3,45 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProjectHub - Dashboard</title>
+    <title>ProjectHub - Workspace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- Menu Lateral -->
     <aside class="sidebar">
-        <h2>ProjectHub</h2>
-        <button class="btn-novo" onclick="abrirModal()">+ Nova Tarefa</button>
+        <div class="brand">
+            <h2>ProjectHub</h2>
+            <span class="version">v1.0</span>
+        </div>
+        
+        <div class="menu-actions">
+            <button class="btn-novo btn-projeto" onclick="abrirModalProjeto()">+ Novo Projeto</button>
+            <button class="btn-novo btn-tarefa" onclick="abrirModalTarefa()">+ Nova Tarefa</button>
+        </div>
     </aside>
 
     <!-- Conteúdo Principal -->
     <main class="main-content">
         <header class="main-header">
-            <h1>Visão Geral dos Projetos</h1>
+            <h1>Visão Geral do Workspace</h1>
+            <p class="subtitle">Gerencie seus projetos e tarefas em tempo real.</p>
         </header>
 
         <div id="projetos-grid" class="projetos-grid">
-            <!-- Cards dos projetos injetados via JS -->
+            <!-- Renderizado via JS -->
         </div>
     </main>
 
-    <!-- Modal de Criação de Tarefa -->
-    <div id="modal-container" class="modal-container hidden">
+    <!-- Modal de Projeto -->
+    <div id="modal-projeto" class="modal-container hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Criar Nova Tarefa</h2>
-                <button class="btn-fechar" onclick="fecharModal()">✕</button>
+                <h2 id="titulo-modal-projeto">Novo Projeto</h2>
+                <button class="btn-fechar" onclick="fecharModal('modal-projeto')">✕</button>
+            </div>
+            <form id="form-projeto" onsubmit="salvarProjeto(event)">
+                <input type="hidden" id="projeto-id">
+                <div class="form-group">
+                    <label>Nome do Projeto</label>
+                    <input type="text" id="input-nome-projeto" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="input-desc-projeto" autocomplete="off">
+                </div>
+                <button type="submit" class="btn-novo btn-projeto">Salvar Projeto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Tarefa -->
+    <div id="modal-tarefa" class="modal-container hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="titulo-modal-tarefa">Nova Tarefa</h2>
+                <button class="btn-fechar" onclick="fecharModal('modal-tarefa')">✕</button>
             </div>
             <form id="form-tarefa" onsubmit="salvarTarefa(event)">
+                <input type="hidden" id="tarefa-id">
                 <div class="form-group">
-                    <label for="input-titulo">Título da Tarefa</label>
-                    <input type="text" id="input-titulo" placeholder="Ex: Criar documentação" required>
+                    <label>Título da Tarefa</label>
+                    <input type="text" id="input-titulo-tarefa" required autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <label for="select-projeto">Projeto Relacionado</label>
+                    <label>Vincular ao Projeto</label>
                     <select id="select-projeto" required></select>
                 </div>
-                <button type="submit" class="btn-novo">Salvar Tarefa</button>
+                <button type="submit" class="btn-novo btn-tarefa">Salvar Tarefa</button>
             </form>
         </div>
     </div>

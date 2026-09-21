@@ -1,249 +1,79 @@
-/* Importando uma fonte moderna do Google */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Variáveis de Cores (Paleta Profissional) */
 :root {
-    --primary-color: #6366f1; /* Indigo levemente ajustado para destacar no escuro */
+    --primary-color: #6366f1; 
     --primary-hover: #4f46e5;
-    --bg-color: #0f172a;      /* Fundo escuro profundo elegante */
-    --surface-color: #1e293b; /* Cards levemente mais claros que o fundo (dá elevação) */
-    --text-main: #f8fafc;     /* Branco suave para não cansar a vista */
-    --text-muted: #94a3b8;    /* Cinza claro legível para descrições e subtextos */
-    --border-color: #334155;  /* Borda sutil que delimita sem poluir */
+    --accent-color: #10b981; /* Verde para tarefas */
+    --accent-hover: #059669;
+    --bg-color: #0f172a;      
+    --surface-color: #1e293b; 
+    --surface-hover: #334155;
+    --text-main: #f8fafc;     
+    --text-muted: #94a3b8;    
+    --border-color: #334155;  
     
-    /* Cores de Status */
-    --status-pendente: #f59e0b;  /* Amarelo/Laranja */
-    --status-andamento: #3b82f6; /* Azul */
-    --status-concluida: #10b981;  /* Verde */
+    --status-pendente: #f59e0b;  
+    --status-andamento: #3b82f6; 
+    --status-concluida: #10b981; 
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
-body {
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    display: flex;
-    height: 100vh;
-}
+body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-/* Barra Lateral (Sidebar) */
-.sidebar {
-    width: 250px;
-    background-color: var(--surface-color);
-    border-right: 1px solid var(--border-color);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-}
+/* Sidebar */
+.sidebar { width: 260px; background-color: var(--surface-color); border-right: 1px solid var(--border-color); padding: 24px; display: flex; flex-direction: column; }
+.brand h2 { color: var(--text-main); font-size: 22px; font-weight: 700; }
+.brand .version { font-size: 12px; color: var(--primary-color); font-weight: 600; }
+.menu-actions { margin-top: 40px; display: flex; flex-direction: column; gap: 12px; }
 
-.sidebar h2 {
-    color: var(--primary-color);
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 40px;
-}
+/* Botões */
+.btn-novo { color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; width: 100%; font-size: 14px; }
+.btn-projeto { background-color: var(--primary-color); }
+.btn-projeto:hover { background-color: var(--primary-hover); }
+.btn-tarefa { background-color: var(--accent-color); }
+.btn-tarefa:hover { background-color: var(--accent-hover); }
 
-.btn-novo {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    width: 100%;
-}
+/* Main */
+.main-content { flex: 1; padding: 40px; overflow-y: auto; }
+.main-header { margin-bottom: 30px; }
+.main-header h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { color: var(--text-muted); font-size: 14px; }
 
-.btn-novo:hover {
-    background-color: var(--primary-hover);
-}
+/* Grid & Cards */
+.projetos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; align-items: start; }
+.projeto-card { background-color: var(--surface-color); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 16px; }
 
-/* Área Principal */
-.main-content {
-    flex: 1;
-    padding: 40px;
-    overflow-y: auto;
-}
+/* Cabeçalho do Projeto */
+.projeto-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.projeto-info h3 { font-size: 18px; margin-bottom: 4px; color: var(--text-main); }
+.projeto-info p { color: var(--text-muted); font-size: 13px; line-height: 1.4; }
+.projeto-acoes { display: flex; gap: 4px; }
+.btn-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: 0.2s; font-size: 14px; }
+.btn-icon:hover { background: var(--surface-hover); color: var(--text-main); }
+.btn-icon.danger:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
-.main-header {
-    margin-bottom: 30px;
-}
+/* Tarefas */
+.tarefas-lista { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.tarefa-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; font-size: 14px; background-color: rgba(15, 23, 42, 0.5); border-radius: 6px; border: 1px solid var(--border-color); }
+.tarefa-acoes { display: flex; align-items: center; gap: 12px; }
 
-.main-header h1 {
-    font-size: 28px;
-    font-weight: 600;
-}
+/* Badges */
+.badge { padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; transition: opacity 0.2s; }
+.badge:hover { opacity: 0.8; }
+.badge.pendente { background-color: rgba(245, 158, 11, 0.2); color: var(--status-pendente); border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge.em-andamento { background-color: rgba(59, 130, 246, 0.2); color: var(--status-andamento); border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge.concluida { background-color: rgba(16, 185, 129, 0.2); color: var(--status-concluida); border: 1px solid rgba(16, 185, 129, 0.3); }
 
-/* Grid de Projetos */
-.projetos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
-}
-
-/* Card do Projeto */
-.projeto-card {
-    background-color: var(--surface-color);
-    border-radius: 12px;
-    padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.projeto-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.projeto-card h3 {
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.projeto-card p {
-    color: var(--text-muted);
-    font-size: 14px;
-    margin-bottom: 20px;
-    line-height: 1.5;
-}
-
-/* Lista de Tarefas dentro do Card */
-.tarefas-lista {
-    list-style: none;
-    border-top: 1px solid var(--border-color);
-    padding-top: 16px;
-}
-
-.tarefa-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    font-size: 14px;
-    border-bottom: 1px dashed var(--border-color);
-}
-
-.tarefa-item:last-child {
-    border-bottom: none;
-}
-
-/* Ações da Tarefa */
-.tarefa-acoes {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.badge {
-    cursor: pointer;
-    user-select: none;
-    transition: opacity 0.2s;
-}
-
-.badge:hover {
-    opacity: 0.8;
-}
-
-.btn-deletar {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: color 0.2s, background 0.2s;
-}
-
-.btn-deletar:hover {
-    color: #ef4444;
-    background-color: rgba(239, 68, 68, 0.1);
-}
-
-/* Modal (Janela Flutuante) */
-.modal-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-container.hidden {
-    display: none;
-}
-
-.modal-content {
-    background-color: var(--surface-color);
-    border: 1px solid var(--border-color);
-    padding: 24px;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 420px;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.btn-fechar {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group label {
-    display: block;
-    font-size: 14px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    outline: none;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: var(--primary-color);
-}
-
-/* Etiquetas de Status (Badges) */
-.badge {
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.badge.pendente { background-color: #fef3c7; color: #d97706; }
-.badge.em-andamento { background-color: #dbeafe; color: #1d4ed8; }
-.badge.concluida { background-color: #d1fae5; color: #047857; }
+/* Modais */
+.modal-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-container.hidden { display: none; }
+.modal-content { background-color: var(--surface-color); border: 1px solid var(--border-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h2 { font-size: 18px; }
+.btn-fechar { background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; }
+.btn-fechar:hover { color: var(--text-main); }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+.form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-main); outline: none; transition: border 0.2s; }
+.form-group input:focus, .form-group select:focus { border-color: var(--primary-color); }

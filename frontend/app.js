@@ -1,175 +1,207 @@
 const API_URL = 'http://127.0.0.1:8000';
 let listaProjetosCache = [];
 
-// Carrega os projetos e tarefas no Dashboard
-async function carregarDashboard() {
+// ==========================================
+// RENDERIZAÇÃO PRINCIPAL (Sem Piscar na tela)
+// ==========================================
+async function carregarDashboard(silencioso = false) {
     const grid = document.getElementById('projetos-grid');
-    grid.innerHTML = '<p style="color: var(--text-muted);">Carregando dados...</p>';
+    
+    // Só exibe mensagem de loading se for a primeira vez carregando
+    if (!silencioso && grid.innerHTML === '') {
+        grid.innerHTML = '<p style="color: var(--text-muted);">Sincronizando workspace...</p>';
+    }
 
     try {
         const resProjetos = await fetch(`${API_URL}/projetos/`);
         listaProjetosCache = await resProjetos.json();
 
-        grid.innerHTML = '';
+        // Variável temporária para montar o HTML sem mexer na tela real ainda
+        let novoConteudoHTML = '';
 
         if (listaProjetosCache.length === 0) {
-            grid.innerHTML = '<p style="color: var(--text-muted);">Nenhum projeto cadastrado.</p>';
-            return;
-        }
+            novoConteudoHTML = '<p style="color: var(--text-muted);">Nenhum projeto no workspace. Crie o primeiro!</p>';
+        } else {
+            // Busca tarefas para todos os projetos
+            for (const projeto of listaProjetosCache) {
+                const resTarefas = await fetch(`${API_URL}/tarefas/projeto/${projeto.id}`);
+                const tarefas = await resTarefas.json();
 
-        for (const projeto of listaProjetosCache) {
-            const resTarefas = await fetch(`${API_URL}/tarefas/projeto/${projeto.id}`);
-            const tarefas = await resTarefas.json();
+                let tarefasHTML = '';
+                if (tarefas.length === 0) {
+                    tarefasHTML = '<li class="tarefa-item" style="color: var(--text-muted); justify-content: center; font-style: italic;">Nenhuma tarefa vinculada.</li>';
+                } else {
+                    tarefas.forEach(t => {
+                        const classeBadge = obterClasseBadge(t.status);
+                        // Escapando aspas para evitar quebra no HTML
+                        const tituloLimpo = t.titulo.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        
+                        tarefasHTML += `
+                            <li class="tarefa-item">
+                                <span>${t.titulo}</span>
+                                <div class="tarefa-acoes">
+                                    <span class="badge ${classeBadge}" title="Mudar status" onclick="alternarStatus(${t.id}, '${tituloLimpo}', '${t.status}')">${t.status}</span>
+                                    <button class="btn-icon danger" title="Excluir tarefa" onclick="deletarTarefa(${t.id})"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </li>
+                        `;
+                    });
+                }
 
-            const card = document.createElement('div');
-            card.className = 'projeto-card';
+                // Protegendo os dados do projeto para a função de edição
+                const nomeLimpo = projeto.nome.replace(/'/g, "\\'");
+                const descLimpa = (projeto.descricao || '').replace(/'/g, "\\'");
 
-            let tarefasHTML = '';
-            if (tarefas.length === 0) {
-                tarefasHTML = '<li class="tarefa-item" style="color: var(--text-muted);"><em>Nenhuma tarefa vinculada.</em></li>';
-            } else {
-                tarefas.forEach(tarefa => {
-                    const classeBadge = obterClasseBadge(tarefa.status);
-                    
-                    // Escapa aspas para evitar erros de sintaxe no HTML inline
-                    const tituloEscapado = tarefa.titulo.replace(/'/g, "\\'");
-
-                    tarefasHTML += `
-                        <li class="tarefa-item">
-                            <span>${tarefa.titulo}</span>
-                            <div class="tarefa-acoes">
-                                <span class="badge ${classeBadge}" 
-                                      title="Clique para mudar o status"
-                                      onclick="alternarStatus(${tarefa.id}, '${tituloEscapado}', '${tarefa.status}')">
-                                    ${tarefa.status}
-                                </span>
-                                <button class="btn-deletar" 
-                                        title="Excluir tarefa" 
-                                        onclick="deletarTarefa(${tarefa.id})">✕</button>
+                novoConteudoHTML += `
+                    <div class="projeto-card">
+                        <div class="projeto-header">
+                            <div class="projeto-info">
+                                <h3>${projeto.nome}</h3>
+                                <p>${projeto.descricao || 'Sem descrição'}</p>
                             </div>
-                        </li>
-                    `;
-                });
+                            <div class="projeto-acoes">
+                                <button class="btn-icon" title="Editar Projeto" onclick="abrirModalProjeto(${projeto.id}, '${nomeLimpo}', '${descLimpa}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-icon danger" title="Excluir Projeto" onclick="deletarProjeto(${projeto.id})"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <ul class="tarefas-lista">
+                            ${tarefasHTML}
+                        </ul>
+                    </div>
+                `;
             }
-
-            card.innerHTML = `
-                <h3>${projeto.nome}</h3>
-                <p>${projeto.descricao || 'Sem descrição.'}</p>
-                <ul class="tarefas-lista">
-                    ${tarefasHTML}
-                </ul>
-            `;
-
-            grid.appendChild(card);
         }
+
+        // Troca a tela inteira de uma só vez (Evita o piscar)
+        grid.innerHTML = novoConteudoHTML;
+
     } catch (erro) {
-        console.error("Erro ao carregar dashboard:", erro);
-        grid.innerHTML = '<p style="color: #ef4444;">Erro de conexão com o servidor.</p>';
+        console.error("Erro:", erro);
+        grid.innerHTML = '<p style="color: #ef4444;">Falha ao conectar com o servidor. O FastAPI está rodando?</p>';
     }
 }
 
-// PUT: Alterna o status da tarefa no banco
-async function alternarStatus(id, titulo, statusAtual) {
-    const proximosStatus = {
-        'Pendente': 'Em Andamento',
-        'Em Andamento': 'Concluída',
-        'Concluída': 'Pendente'
-    };
+// ==========================================
+// CRUD DE PROJETOS
+// ==========================================
+async function salvarProjeto(event) {
+    event.preventDefault();
+    const id = document.getElementById('projeto-id').value;
+    const nome = document.getElementById('input-nome-projeto').value;
+    const descricao = document.getElementById('input-desc-projeto').value;
 
-    const novoStatus = proximosStatus[statusAtual] || 'Pendente';
+    const metodo = id ? 'PUT' : 'POST';
+    const url = id ? `${API_URL}/projetos/${id}` : `${API_URL}/projetos/`;
 
     try {
-        const resposta = await fetch(`${API_URL}/tarefas/${id}`, {
-            method: 'PUT',
+        const res = await fetch(url, {
+            method: metodo,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                titulo: titulo,
-                status: novoStatus
-            })
+            body: JSON.stringify({ nome, descricao })
         });
 
-        if (resposta.ok) {
-            carregarDashboard();
+        if (res.ok) {
+            fecharModal('modal-projeto');
+            carregarDashboard(true); // Passa 'true' para atualizar silenciosamente
         } else {
-            alert('Erro ao atualizar status.');
+            alert('Erro ao salvar o projeto.');
         }
-    } catch (erro) {
-        console.error('Erro na requisição PUT:', erro);
-    }
+    } catch (erro) { console.error(erro); }
 }
 
-// DELETE: Exclui a tarefa do banco
-async function deletarTarefa(id) {
-    if (!confirm('Deseja realmente excluir esta tarefa?')) return;
-
+async function deletarProjeto(id) {
+    if (!confirm('ATENÇÃO: Excluir este projeto apagará todas as tarefas vinculadas. Continuar?')) return;
+    
     try {
-        const resposta = await fetch(`${API_URL}/tarefas/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (resposta.ok) {
-            carregarDashboard();
-        } else {
-            alert('Erro ao excluir tarefa.');
-        }
-    } catch (erro) {
-        console.error('Erro na requisição DELETE:', erro);
-    }
+        const res = await fetch(`${API_URL}/projetos/${id}`, { method: 'DELETE' });
+        if (res.ok) carregarDashboard(true);
+    } catch (erro) { console.error(erro); }
 }
 
-// POST: Cria uma nova tarefa
+// ==========================================
+// CRUD DE TAREFAS
+// ==========================================
 async function salvarTarefa(event) {
     event.preventDefault();
-
-    const titulo = document.getElementById('input-titulo').value;
+    const titulo = document.getElementById('input-titulo-tarefa').value;
     const projeto_id = parseInt(document.getElementById('select-projeto').value);
 
     try {
-        const resposta = await fetch(`${API_URL}/tarefas/`, {
+        const res = await fetch(`${API_URL}/tarefas/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ titulo, projeto_id })
         });
 
-        if (resposta.ok) {
-            fecharModal();
-            carregarDashboard();
-        } else {
-            alert('Erro ao salvar tarefa.');
+        if (res.ok) {
+            fecharModal('modal-tarefa');
+            carregarDashboard(true);
         }
-    } catch (erro) {
-        console.error('Erro na requisição POST:', erro);
-    }
+    } catch (erro) { console.error(erro); }
 }
 
-// Controle do Modal
-function abrirModal() {
+async function alternarStatus(id, titulo, statusAtual) {
+    const proximos = { 'Pendente': 'Em Andamento', 'Em Andamento': 'Concluída', 'Concluída': 'Pendente' };
+    const novoStatus = proximos[statusAtual] || 'Pendente';
+
+    try {
+        const res = await fetch(`${API_URL}/tarefas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, status: novoStatus })
+        });
+        if (res.ok) carregarDashboard(true);
+    } catch (erro) { console.error(erro); }
+}
+
+async function deletarTarefa(id) {
+    if (!confirm('Excluir esta tarefa?')) return;
+    try {
+        const res = await fetch(`${API_URL}/tarefas/${id}`, { method: 'DELETE' });
+        if (res.ok) carregarDashboard(true);
+    } catch (erro) { console.error(erro); }
+}
+
+// ==========================================
+// CONTROLE DE MODAIS
+// ==========================================
+function abrirModalProjeto(id = '', nome = '', descricao = '') {
+    document.getElementById('projeto-id').value = id;
+    document.getElementById('input-nome-projeto').value = nome;
+    document.getElementById('input-desc-projeto').value = descricao;
+    
+    document.getElementById('titulo-modal-projeto').innerText = id ? 'Editar Projeto' : 'Novo Projeto';
+    document.getElementById('modal-projeto').classList.remove('hidden');
+}
+
+function abrirModalTarefa() {
+    if (listaProjetosCache.length === 0) {
+        alert("Você precisa criar um projeto primeiro!");
+        return;
+    }
+
     const select = document.getElementById('select-projeto');
     select.innerHTML = '';
-
     listaProjetosCache.forEach(p => {
-        const option = document.createElement('option');
-        option.value = p.id;
-        option.textContent = p.nome;
-        select.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nome;
+        select.appendChild(opt);
     });
 
-    document.getElementById('modal-container').classList.remove('hidden');
+    document.getElementById('modal-tarefa').classList.remove('hidden');
 }
 
-function fecharModal() {
-    document.getElementById('modal-container').classList.add('hidden');
-    document.getElementById('form-tarefa').reset();
+function fecharModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    if(modalId === 'modal-projeto') document.getElementById('form-projeto').reset();
+    if(modalId === 'modal-tarefa') document.getElementById('form-tarefa').reset();
 }
 
 function obterClasseBadge(status) {
-    switch (status) {
-        case 'Pendente': return 'pendente';
-        case 'Em Andamento': return 'em-andamento';
-        case 'Concluída': return 'concluida';
-        default: return 'pendente';
-    }
+    const mapas = { 'Pendente': 'pendente', 'Em Andamento': 'em-andamento', 'Concluída': 'concluida' };
+    return mapas[status] || 'pendente';
 }
 
-// Inicialização
+// Start
 carregarDashboard();
