@@ -81,9 +81,7 @@ async function carregarDashboard(silencioso = false) {
     }
 }
 
-// ==========================================
 // CRUD DE PROJETOS
-// ==========================================
 async function salvarProjeto(event) {
     event.preventDefault();
     const id = document.getElementById('projeto-id').value;
@@ -118,9 +116,7 @@ async function deletarProjeto(id) {
     } catch (erro) { console.error(erro); }
 }
 
-// ==========================================
 // CRUD DE TAREFAS
-// ==========================================
 async function salvarTarefa(event) {
     event.preventDefault();
     const titulo = document.getElementById('input-titulo-tarefa').value;
@@ -162,9 +158,7 @@ async function deletarTarefa(id) {
     } catch (erro) { console.error(erro); }
 }
 
-// ==========================================
 // CONTROLE DE MODAIS
-// ==========================================
 function abrirModalProjeto(id = '', nome = '', descricao = '') {
     document.getElementById('projeto-id').value = id;
     document.getElementById('input-nome-projeto').value = nome;

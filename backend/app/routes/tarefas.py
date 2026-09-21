@@ -1,36 +1,38 @@
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg2.extras import RealDictCursor
 
-# Importamos o molde que você acabou de criar
+# Importa os moldes de validação (Schemas) e a conexão com o banco de dados
 from app.schemas.tarefa import Tarefa, TarefaCriacao, TarefaAtualizacao
 from app.database import get_db
 
 
-# Criamos um roteador específico para as tarefas
+# Roteador para as tarefas
+# 'prefix' define que a URL base deste arquivo será sempre /tarefas
 router = APIRouter(
     prefix="/tarefas",
     tags=["Tarefas"]
 )
 
 # PEGAR TODAS AS TAREFAS DE UM PROJETO ESPECÍFICO
+# response_model garante que a saída seja formatada como uma lista de Tarefas
 @router.get("/projeto/{projeto_id}", response_model=list[Tarefa])
 def listar_tarefas_do_projeto(projeto_id: int, dados=Depends(get_db)):
     
+    # RealDictCursor faz o banco devolver os dados como dicionário (ideal para JSON)
     cursor = dados.cursor(cursor_factory=RealDictCursor)
 
-    # O segredo está aqui: pedimos tarefas ONDE o projeto_id seja igual ao que veio na URL
+    # O %s substitui a variável com segurança, evitando ataques de SQL Injection
     cursor.execute(
         "SELECT * FROM tarefas WHERE projeto_id = %s ORDER BY id;", 
         (projeto_id,)
     )
 
-    # Usamos fetchall() porque um projeto pode ter VÁRIAS tarefas (uma lista)
+    # fetchall() captura todas as linhas que o banco encontrou
     tarefas = cursor.fetchall()
 
     cursor.close()
 
     # Retornamos a lista. Se não tiver nenhuma tarefa, ele retorna uma lista vazia: []
-    # Isso é perfeitamente normal, significa apenas que o projeto ainda não tem tarefas.
     return tarefas
 
 
@@ -40,8 +42,8 @@ def criar_tarefa(tarefa: TarefaCriacao, dados=Depends(get_db)):
     
     cursor = dados.cursor(cursor_factory=RealDictCursor)
 
-    # Note que passamos apenas titulo e projeto_id.
     # O banco gera o 'id' e coloca 'Pendente' no status automaticamente!
+    # O comando RETURNING devolve a linha recém-criada (evita fazer um SELECT logo depois)
     cursor.execute(
         """
         INSERT INTO tarefas (titulo, projeto_id) 
@@ -51,9 +53,10 @@ def criar_tarefa(tarefa: TarefaCriacao, dados=Depends(get_db)):
         (tarefa.titulo, tarefa.projeto_id)
     )
 
+    # fetchone() captura a única linha que o RETURNING devolveu
     nova_tarefa = cursor.fetchone()
 
-    # Como é um INSERT (escrita), precisamos do commit!
+    # Confirma e salva a inserção de fato no banco de dados
     dados.commit()
 
     cursor.close()
@@ -67,7 +70,7 @@ def excluir_tarefa(tarefa_id: int, dados=Depends(get_db)):
 
     cursor = dados.cursor(cursor_factory=RealDictCursor)
 
-    # Agora sim: delete a tarefa onde o ID da tarefa seja igual ao tarefa_id que veio na URL
+    # deleta a tarefa onde o ID da tarefa seja igual ao tarefa_id que veio na URL
     cursor.execute(
         "DELETE FROM tarefas WHERE id = %s RETURNING id;",
         (tarefa_id,)
@@ -79,6 +82,7 @@ def excluir_tarefa(tarefa_id: int, dados=Depends(get_db)):
 
     cursor.close()
 
+    # Se a variável estiver vazia, levanta um erro 404 (Não Encontrado) para o frontend
     if not tarefa_deletada:
         raise HTTPException(
             status_code=404,
