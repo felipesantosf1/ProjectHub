@@ -1,25 +1,27 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  
+
 from app.routes import projetos
-from app.routes import tarefas  # 1. Importamos o novo arquivo de rotas
+from app.routes import tarefas
 
 app = FastAPI(title="ProjectHub API")
 
-# Incluímos as rotas de projetos (que você já tinha)
-app.include_router(projetos.router)
+app.add_middleware(
+    CORSMiddleware,
 
-# 2. Incluímos as rotas de tarefas (NOVO)
+    allow_origins=["*"], 
+    
+    allow_credentials=True,
+    
+    allow_methods=["*"], 
+    
+    allow_headers=["*"], 
+)
+# ==========================================
+
+app.include_router(projetos.router)
 app.include_router(tarefas.router)
 
 @app.get("/")
 def raiz():
     return {"mensagem": "Bem-vindo à API do ProjectHub!"}
-
-
-
-
-
-
-
-
-
-
